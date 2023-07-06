@@ -17,5 +17,7 @@ func DoCreateDomain() {
 	err := domains.CreateDomain(homeTemplate, rootTemplate, name)
 	if err != nil {
 		FatalStderr("Failed to create domain: " +err.Error(), 5)
+	} else {
+		fmt.Println("Domain created successfully")
 	}
 }

@@ -3,6 +3,7 @@ package domains
 import (
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/estebangarcia21/subprocess"
 	"github.com/otiai10/copy"
@@ -13,7 +14,7 @@ import (
 
 func createDomainRoot(template string, name string) error {
 	// ensure template ends with .qcow2
-	if template[len(template)-6:] != ".qcow2" {
+	if !strings.HasSuffix(template, ".qcow2") {
 		template += ".qcow2"
 	}
 
@@ -42,7 +43,7 @@ func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
 	}
 
 	// ensure domain that would be created doesn't already exist
-	exists, existsErr := existsFunc(DomainsDir + name)
+	exists, existsErr := existsFunc(DomainsDir + name + "/home.qcow2")
 	if existsErr != nil {
 		return existsErr
 	}
@@ -51,7 +52,7 @@ func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
 	}
 
 	// ensure homeTemplate ends with .qcow2
-	if homeTemplate[len(homeTemplate)-6:] != ".qcow2" {
+	if ! strings.HasSuffix(homeTemplate, ".qcow2") {
 		homeTemplate += ".qcow2"
 	}
 	directoryCreateError := filesystem.CreateDirectory(DomainsDir + name)
