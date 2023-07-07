@@ -17,6 +17,7 @@ func createDomainRoot(template string, name string) error {
 	if !strings.HasSuffix(template, ".qcow2") {
 		template += ".qcow2"
 	}
+	rootCloneFile := DomainsDir + name + "/" + template
 
 	return subprocess.New(
 		"qemu-img",
@@ -27,7 +28,7 @@ func createDomainRoot(template string, name string) error {
 		subprocess.Arg("qcow2"),
 		subprocess.Arg("-b"),
 		subprocess.Arg(templates.RootTemplateDir+template),
-		subprocess.Arg(DomainsDir+name+"/"+"root.qcow2")).Exec()
+		subprocess.Arg(rootCloneFile)).Exec()
 }
 
 func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
@@ -52,7 +53,7 @@ func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
 	}
 
 	// ensure homeTemplate ends with .qcow2
-	if ! strings.HasSuffix(homeTemplate, ".qcow2") {
+	if !strings.HasSuffix(homeTemplate, ".qcow2") {
 		homeTemplate += ".qcow2"
 	}
 	directoryCreateError := filesystem.CreateDirectory(DomainsDir + name)

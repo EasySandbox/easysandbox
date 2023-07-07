@@ -2,27 +2,18 @@ package main
 
 import (
 	"fmt"
-	//"flag"
 	"os"
 	"os/exec"
 
-	//"libvirt.org/go/libvirt"
 
 	"git.voidnet.tech/kev/easysandbox/cli"
 	"git.voidnet.tech/kev/easysandbox/domains"
 	"git.voidnet.tech/kev/easysandbox/filesystem"
 	"git.voidnet.tech/kev/easysandbox/gui"
 	"git.voidnet.tech/kev/easysandbox/templates"
-	//"github.com/adrg/xdg"
 )
 
 func main() {
-
-	// conn, err := libvirt.NewConnect("qemu:///system")
-	// if err != nil {
-	// 	cli.FatalStderr("Failed to connect to qemu:///system", 1)
-	// }
-	// defer conn.Close()
 
 	if _, err := exec.LookPath(gui.XPRA_BIN_NAME); err != nil {
 		cli.PrintStderr(fmt.Sprintf("%s not found in path\nIt is required for rendering VM apps", gui.XPRA_BIN_NAME))
@@ -63,10 +54,13 @@ func main() {
 	case "create-domain":
 		cli.DoCreateDomain()
 	case "start-domain":
-		fmt.Println("start-domain")
+		cli.StartDomain()
+	case "getip":
+		cli.PrintIPAddress()
+	case "show-template":
+		cli.ShowTemplate()
 	default:
 		fmt.Println("cmd:", cmd)
 	}
-	//flag.Parse()
-	//fmt.Println("listTemplatesPtr:", *listTemplatesPtr)
+
 }
