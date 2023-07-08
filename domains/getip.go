@@ -5,7 +5,7 @@ import (
 )
 
 func GetDomainIP(name string) (string, error) {
-	conn, err := libvirt.NewConnect("qemu:///system")
+	conn, err := libvirt.NewConnect("qemu:///session")
 	if err != nil {
 		return "", err
 	}

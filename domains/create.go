@@ -2,22 +2,32 @@ package domains
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/estebangarcia21/subprocess"
-	"github.com/otiai10/copy"
 
 	"git.voidnet.tech/kev/easysandbox/filesystem"
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
 
-func createDomainRoot(template string, name string) error {
+func createBackingFile(template string, name string, isRoot bool) error {
 	// ensure template ends with .qcow2
 	if !strings.HasSuffix(template, ".qcow2") {
 		template += ".qcow2"
 	}
-	rootCloneFile := DomainsDir + name + "/" + template
+	var templatePath string
+	var targetFile string
+	if isRoot {
+		templatePath = templates.RootTemplateDir + template
+		targetFile = DomainsDir + name + "/root.qcow2"
+	} else {
+		templatePath = templates.HomeTemplateDir + template
+		targetFile = DomainsDir + name + "/home.qcow2"
+	}
+
+	fmt.Println("Creating domain with backing file: " + templatePath + " at " + targetFile)
 
 	return subprocess.New(
 		"qemu-img",
@@ -27,8 +37,8 @@ func createDomainRoot(template string, name string) error {
 		subprocess.Arg("-F"),
 		subprocess.Arg("qcow2"),
 		subprocess.Arg("-b"),
-		subprocess.Arg(templates.RootTemplateDir+template),
-		subprocess.Arg(rootCloneFile)).Exec()
+		subprocess.Arg(templatePath),
+		subprocess.Arg(targetFile)).Exec()
 }
 
 func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
@@ -60,11 +70,12 @@ func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
 	if directoryCreateError != nil {
 		return directoryCreateError
 	}
-	createDomainRootError := createDomainRoot(rootTemplate, name)
+	createDomainRootError := createBackingFile(rootTemplate, name, true)
 	if createDomainRootError != nil {
-		return createDomainRoot(rootTemplate, name)
+		return createDomainRootError
 	}
-	homeCopyError := copy.Copy(templates.HomeTemplateDir+homeTemplate, DomainsDir+name+"/home.qcow2")
+	//homeCopyError := copy.Copy(templates.HomeTemplateDir+homeTemplate, DomainsDir+name+"/home.qcow2")
+	homeCopyError := createBackingFile(homeTemplate, name, false)
 	if homeCopyError != nil {
 		return homeCopyError
 	}

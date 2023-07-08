@@ -55,7 +55,9 @@ func main() {
 		cli.DoCreateDomain()
 	case "start-domain":
 		cli.StartDomain()
-	case "getip":
+	case "stop-domain":
+		cli.StopDomain()
+	case "get-domain-ip":
 		cli.PrintIPAddress()
 	case "show-template":
 		cli.ShowTemplate()

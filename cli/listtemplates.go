@@ -18,7 +18,7 @@ func PrintTemplatesList() {
 	if len(templateList) == 0 {
 		fmt.Println("No root templates found.")
 	} else {
-
+		fmt.Println("Root templates:")
 		for _, template := range templateList {
 			fmt.Println(template)
 		}
@@ -34,7 +34,7 @@ func PrintTemplatesList() {
 	if len(templateList) == 0 {
 		fmt.Println("No home templates found.")
 	} else {
-
+		fmt.Println("\nHome templates:")
 		for _, template := range templateList {
 			fmt.Println(template)
 		}

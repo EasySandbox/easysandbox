@@ -2,6 +2,7 @@ package domains
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/estebangarcia21/subprocess"
 	"libvirt.org/go/libvirt"
@@ -43,15 +44,15 @@ func StartDomain(name string) error {
 		return getBackingFileErr
 	}
 	fmt.Println("Using root template: " + rootToUse)
-	createDomainRootErr := createDomainRoot(rootToUse, name)
+	createDomainRootErr := createBackingFile(rootToUse, name, true)
 
 	if createDomainRootErr != nil {
 		return createDomainRootErr
 	}
 
-	// kind of a hack, because we could use the libvirt api but that involves
+	// kind of a hack, because we could use the libvirt api, but that involves XML
 	virtInstallCmd := subprocess.New("virt-install", subprocess.Args("--os-variant", "fedora38", "--virt-type=kvm",
-		"--name="+name, "--ram", "6000", "--vcpus=6", "--virt-type=kvm", "--hvm",
+		"--name="+name, "--ram", "6000", "--vcpus=6", "--virt-type=kvm", "--hvm", "--network=nat,type=user",
 		"--disk", rootCloneFile+",target.bus=sata", "--disk", homeFile+",target.bus=sata", "--import", "--install",
 		"no_install=yes", "--noreboot"))
 
@@ -60,6 +61,19 @@ func StartDomain(name string) error {
 	if virtInstallCmdErr != nil {
 		return virtInstallCmdErr
 	}
+
+	conn, err := libvirt.NewConnect("qemu:///session")
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	domain, err := conn.LookupDomainByName(name)
+	if err != nil {
+		return err
+	}
+	defer domain.Free()
+	domain.Create()
 
 	return nil
 }
@@ -79,5 +93,21 @@ func StopDomain(name string) error {
 
 	domain.Shutdown()
 
-	return nil
+
+	// loop until domain is shut off
+	for {
+		state, returnInt, stateErr := domain.GetState()
+		if returnInt == -1  {
+			return errors.New("error getting domain state")
+		}
+		if stateErr != nil {
+			return stateErr
+		}
+		time.Sleep(1 * time.Second)
+		if state == libvirt.DOMAIN_SHUTOFF {
+			break
+		}
+	}
+	return domain.Undefine()
+
 }
