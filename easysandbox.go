@@ -46,11 +46,6 @@ func main() {
 	switch cmd {
 	case "list-templates":
 		cli.PrintTemplatesList()
-	case "import-root-template":
-		fmt.Println("import-root-template")
-	case "import-home-template":
-		fmt.Println("import-home-template")
-
 	case "create-domain":
 		cli.DoCreateDomain()
 	case "start-domain":

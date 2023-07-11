@@ -8,7 +8,7 @@ import (
 
 func DoCreateDomain() {
 	if len(os.Args) != 5 {
-		FatalStderr("usage: easysandbox create-domain <home-template> <root-template> <name>", 4)
+		FatalStderr("usage: easysandbox create-domain <home-template-name> <root-template-name> <domain-name>", 4)
 	}
 	homeTemplate := os.Args[2]
 	rootTemplate := os.Args[3]

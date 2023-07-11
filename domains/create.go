@@ -2,8 +2,6 @@ package domains
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/estebangarcia21/subprocess"
@@ -27,8 +25,6 @@ func createBackingFile(template string, name string, isRoot bool) error {
 		targetFile = DomainsDir + name + "/home.qcow2"
 	}
 
-	fmt.Println("Creating domain with backing file: " + templatePath + " at " + targetFile)
-
 	return subprocess.New(
 		"qemu-img",
 		subprocess.Arg("create"),
@@ -42,19 +38,9 @@ func createBackingFile(template string, name string, isRoot bool) error {
 }
 
 func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
-	existsFunc := func(path string) (bool, error) {
-		_, err := os.Stat(path)
-		if err == nil {
-			return true, nil
-		}
-		if errors.Is(err, os.ErrNotExist) {
-			return false, nil
-		}
-		return false, err
-	}
 
 	// ensure domain that would be created doesn't already exist
-	exists, existsErr := existsFunc(DomainsDir + name + "/home.qcow2")
+	exists, existsErr := filesystem.PathExists(DomainsDir + name + "/home.qcow2")
 	if existsErr != nil {
 		return existsErr
 	}
@@ -70,15 +56,17 @@ func CreateDomain(homeTemplate string, rootTemplate string, name string) error {
 	if directoryCreateError != nil {
 		return directoryCreateError
 	}
+
 	createDomainRootError := createBackingFile(rootTemplate, name, true)
 	if createDomainRootError != nil {
 		return createDomainRootError
 	}
-	//homeCopyError := copy.Copy(templates.HomeTemplateDir+homeTemplate, DomainsDir+name+"/home.qcow2")
+
 	homeCopyError := createBackingFile(homeTemplate, name, false)
 	if homeCopyError != nil {
 		return homeCopyError
 	}
+
 	return nil
 
 }

@@ -8,14 +8,19 @@ import (
 )
 
 func StartDomain() error {
-	if len(os.Args) != 3 {
+	var userProvidedArgs []string
+	if len(os.Args) < 3 {
 		FatalStderr("usage: easysandbox start <domain-name>", 2)
+	} else if len(os.Args) > 3 {
+		userProvidedArgs = os.Args[3:]
 	}
 
 	domainName := os.Args[2]
 
+	virtInstallArgs := domains.GetVirtInstallArgs(domainName, userProvidedArgs...)
 
-	err := domains.StartDomain(domainName)
+
+	err := domains.StartDomain(domainName, virtInstallArgs)
 
 	if err != nil {
 		FatalStderr("Failed to start domain: "+domainName + "\n" + err.Error(), 1)

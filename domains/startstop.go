@@ -8,53 +8,53 @@ import (
 	"libvirt.org/go/libvirt"
 
 	"errors"
-	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
-func GetBackingFile(path string) (string, error) {
-	cmd := exec.Command("qemu-img", "info", path)
-	output, err := cmd.Output()
+func configureDomainRoot(rootPath string, domain string) error {
+	var err error
+	pass, err := generateRandomPassword(12)
 	if err != nil {
-		return "", err
+		return errors.New("Failed to generate random password: " + err.Error())
+	}
+	fmt.Println("Password for root: " + pass)
+	err = subprocess.New(
+		"virt-customize",
+		subprocess.Args(
+			"-a", rootPath,
+			"--no-selinux-relabel",
+			"--root-password", "password:"+pass,
+			"--delete", "/etc/ssh/*_key",
+			"--delete", "/etc/ssh/*.pub",
+			"--hostname", domain,
+		),
+	).Exec()
+
+	if err != nil {
+		return errors.New("Failed to configure domain root: " + err.Error())
 	}
 
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		if strings.HasPrefix(line, "backing file: ") {
-			backingFilePath := strings.TrimPrefix(line, "backing file: ")
-			return filepath.Base(backingFilePath), nil
-		}
-	}
-
-	return "", errors.New("no backing file found")
+	return nil
 }
 
-func StartDomain(name string) error {
+func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 
 	rootCloneFile := DomainsDir + name + "/" + "root.qcow2"
-	homeFile := DomainsDir + name + "/" + "home.qcow2"
 
-	fmt.Println("getting backing file for " + rootCloneFile)
 	// We create a root qcow2 with a backing file of the root template
 	// If it already exists, it is overwritten
 	rootToUse, getBackingFileErr := GetBackingFile(rootCloneFile)
 	if getBackingFileErr != nil {
 		return getBackingFileErr
 	}
-	fmt.Println("Using root template: " + rootToUse)
-	createDomainRootErr := createBackingFile(rootToUse, name, true)
 
+	createDomainRootErr := createBackingFile(rootToUse, name, true)
 	if createDomainRootErr != nil {
 		return createDomainRootErr
 	}
 
+
 	// kind of a hack, because we could use the libvirt api, but that involves XML
-	virtInstallCmd := subprocess.New("virt-install", subprocess.Args("--os-variant", "fedora38", "--virt-type=kvm",
-		"--name="+name, "--ram", "6000", "--vcpus=6", "--virt-type=kvm", "--hvm", "--network=nat,type=user",
-		"--disk", rootCloneFile+",target.bus=sata", "--disk", homeFile+",target.bus=sata", "--import", "--install",
-		"no_install=yes", "--noreboot"))
+	virtInstallCmd := subprocess.New("virt-install", virtInstallArgs)
 
 	virtInstallCmdErr := virtInstallCmd.Exec()
 
@@ -73,6 +73,12 @@ func StartDomain(name string) error {
 		return err
 	}
 	defer domain.Free()
+
+	configureDomainRootErr := configureDomainRoot(rootCloneFile, name)
+	if configureDomainRootErr != nil {
+		return configureDomainRootErr
+	}
+
 	domain.Create()
 
 	return nil
@@ -93,11 +99,10 @@ func StopDomain(name string) error {
 
 	domain.Shutdown()
 
-
 	// loop until domain is shut off
 	for {
 		state, returnInt, stateErr := domain.GetState()
-		if returnInt == -1  {
+		if returnInt == -1 {
 			return errors.New("error getting domain state")
 		}
 		if stateErr != nil {
