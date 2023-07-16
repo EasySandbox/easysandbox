@@ -13,6 +13,8 @@ import (
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
 
+var Version = "0.0.0"
+
 func main() {
 
 	if _, err := exec.LookPath(gui.XPRA_BIN_NAME); err != nil {

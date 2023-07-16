@@ -15,3 +15,7 @@ func PathExists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+func CreateDirectory(path string) (err error) {
+	return os.MkdirAll(path, 0700)
+}
