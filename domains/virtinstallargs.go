@@ -8,6 +8,10 @@ import (
 )
 
 func GetVirtInstallArgs(domainName string, args ...string) subprocess.Option {
+	return subprocess.Args(GetVirtInstallArgsString(domainName, args...)...)
+}
+
+func GetVirtInstallArgsString(domainName string, args ...string) []string {
 	rootCloneFile := DomainsDir + domainName + "/" + "root.qcow2"
 	homeFile := DomainsDir + domainName + "/" + "home.qcow2"
 
@@ -43,7 +47,7 @@ func GetVirtInstallArgs(domainName string, args ...string) subprocess.Option {
 		allArgs = append(allArgs, arg, value)
 	}
 
-	return subprocess.Args(allArgs...)
+	return allArgs
 }
 
 // func GetVirtInstallArgs(
