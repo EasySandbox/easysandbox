@@ -21,7 +21,6 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		// TODO show help
 		cli.PrintStderr("usage: easysandbox <command>")
 		os.Exit(2)
 	}
@@ -57,7 +56,7 @@ func main() {
 	case "show-template":
 		cli.ShowTemplate()
 	default:
-		fmt.Println("cmd:", cmd)
+		fmt.Println("unknown cmd:", cmd)
 	}
 
 }
