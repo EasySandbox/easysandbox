@@ -4,11 +4,17 @@ import (
 	//"crypto/hmac"
 	//"crypto/sha256"
 	//"io/ioutil"
+	"flag"
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/adrg/xdg"
 
@@ -92,8 +98,76 @@ func getIP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ip.String()))
 }
 
+func ipReporter() {
+
+	server := "hostsystem"
+
+	hostname, _ := os.Hostname()
+	ip, _ := getOurIP()
+
+	url := fmt.Sprintf("http://%s:8080/add?domain=%s&ip=%s", server, hostname, ip)
+
+	for {
+
+		resp, err := http.Post(url, "text/plain", nil)
+
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			body, err := io.ReadAll(resp.Body)
+			if err == nil {
+				if strings.HasPrefix(string(body), "Added IP") {
+					break
+				}
+			}
+		}
+		time.Sleep(1 * time.Second)
+
+	}
+
+}
+
+func getOurIP() (string, error) {
+	conn, err := net.Dial("udp", "1.1.1.1:80") // placeholder IP address, no network activity is actually done
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String(), nil
+}
+
 func main() {
+
+	var bindAddr string
+	var bindPort int
+
+	if len(os.Args) > 1 {
+		if os.Args[1] == "client" {
+			ipReporter()
+			return
+		}
+	}
+
+	flag.StringVar(&bindAddr, "bind-addr", "", "IP address to bind to")
+	flag.IntVar(&bindPort, "bind-port", 8080, "Port to bind to")
+
+	flag.Parse()
+
+	addr := ":" + strconv.Itoa(bindPort)
+	if bindAddr != "" {
+		addr = bindAddr + ":" + strconv.Itoa(bindPort)
+	}
+
 	http.HandleFunc("/add", addIP)
-	http.HandleFunc("/get", getIP) // add this line
-	http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/get", getIP)
+
+	fmt.Println("Running on", addr)
+
+	log.Fatal(http.ListenAndServe(addr, nil))
+
 }
