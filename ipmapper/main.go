@@ -19,6 +19,7 @@ import (
 	"github.com/adrg/xdg"
 
 	"git.voidnet.tech/kev/easysandbox/filesystem"
+	"git.voidnet.tech/kev/easysandbox/getourip"
 )
 
 var hmacKeyPath = xdg.DataHome + "/easysandbox/hmac.key"
@@ -103,7 +104,7 @@ func ipReporter() {
 	server := "hostsystem"
 
 	hostname, _ := os.Hostname()
-	ip, _ := getOurIP()
+	ip, _ := getourip.GetOurIP()
 
 	url := fmt.Sprintf("http://%s:8080/add?domain=%s&ip=%s", server, hostname, ip)
 
@@ -128,17 +129,6 @@ func ipReporter() {
 
 	}
 
-}
-
-func getOurIP() (string, error) {
-	conn, err := net.Dial("udp", "1.1.1.1:80") // placeholder IP address, no network activity is actually done
-	if err != nil {
-		return "", err
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP.String(), nil
 }
 
 func main() {

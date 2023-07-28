@@ -9,6 +9,8 @@ import (
 
 	"github.com/estebangarcia21/subprocess"
 	"libvirt.org/go/libvirt"
+
+	"git.voidnet.tech/kev/easysandbox/getourip"
 )
 
 var ipmapperClientPath = "./release/ipmapper"
@@ -25,6 +27,11 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 
 	if err != nil {
 		return errors.New("Failed to generate random password: " + err.Error())
+	}
+
+	hostIP, err := getourip.GetOurIP()
+	if err != nil {
+		return err
 	}
 
 	ipmapperSystemdServiceFile, err := os.CreateTemp("", "ipmapper.service")
@@ -65,7 +72,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 			"--upload",
 			fmt.Sprintf("%s:%s", ipmapperSystemdTimerFile.Name(), "/etc/systemd/system/ipmapper.timer"),
 			"--append-line", "/etc/fstab:/dev/sdb1 /user/ ext4 defaults 0 1",
-			"--append-line", "/etc/hosts:192.168.1.70 hostsystem",
+			"--append-line", fmt.Sprintf("/etc/hosts:%s hostsystem", hostIP),
 			"--firstboot-command", "systemctl daemon-reload",
 			"--firstboot-command", "systemctl enable ipmapper.timer",
 			"--firstboot-command", "systemctl start ipmapper.timer",
