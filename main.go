@@ -53,10 +53,14 @@ func main() {
 		cli.StartDomain()
 	case "stop-domain":
 		cli.StopDomain()
-	case "get-domain-ip":
-		cli.PrintIPAddress()
+	//case "get-domain-ip":
+		//cli.PrintIPAddress()
 	case "show-template":
 		cli.ShowTemplate()
+	case "domain-exec":
+		cli.DomainExec()
+	case "version":
+		fmt.Println(Version)
 	default:
 		fmt.Println("unknown cmd:", cmd)
 	}
