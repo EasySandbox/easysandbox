@@ -3,7 +3,15 @@ package gui
 import (
 	"fmt"
 	"io"
-	"github.com/estebangarcia21/subprocess"
+	"net/http"
+	"os"
+	"os/exec"
+	"time"
+
+	//"github.com/estebangarcia21/subprocess"
+
+	"git.voidnet.tech/kev/easysandbox/domains"
+
 	"github.com/hashicorp/go-retryablehttp"
 )
 
@@ -14,29 +22,47 @@ var retryClient = retryablehttp.NewClient()
 func RunGUIApplication(ipmapperSocket string,
 	domain string, program string, args ...string) error {
 
-	retryClient.RetryMax = 5
-
-	domainIPRes, getDomainIPError := retryClient.Get(
-		fmt.Sprint("http://", ipmapperSocket, "/?key=", domain))
-
-	if getDomainIPError != nil {
-		return getDomainIPError
+	startDomainErr := domains.StartDomain(domain, domains.GetVirtInstallArgs(domain))
+	if startDomainErr.Error() != "domain is already running" && startDomainErr != nil {
+		return startDomainErr
 	}
-	if domainIPRes.StatusCode > 299 {
-		return fmt.Errorf("IPMapper returned status code %d", domainIPRes.StatusCode)
+
+	var domainIPRes *http.Response
+	var getDomainIPError error
+
+	retryClient.RetryMax = 10
+	notFoundTries := 10
+	for {
+		domainIPRes, getDomainIPError = retryClient.Get(
+			fmt.Sprint("http://", ipmapperSocket, "/get?key=", domain))
+
+		if getDomainIPError != nil {
+			return getDomainIPError
+		}
+		if domainIPRes.StatusCode == 404 {
+			notFoundTries--
+			if notFoundTries == 0 {
+				return fmt.Errorf("IPMapper returned 404 10 times in a row")
+			}
+			time.Sleep(2 * time.Second)
+		} else if domainIPRes.StatusCode > 299 {
+			return fmt.Errorf("IPMapper returned status code %d", domainIPRes.StatusCode)
+		} else {
+			break
+		}
 	}
 	domainIPBytes, bodyErr := io.ReadAll(domainIPRes.Body)
 	if bodyErr != nil {
 		return bodyErr
 	}
 
-	subprocessArgsForGUI := subprocess.Args(
-		"start",
-		"--dpi=100",
-		"--ssh=ssh ssh:user@" + string(domainIPBytes),
-		"--exit-with-children",
-		"--start-child=" + program)
 
-	return subprocess.New(
-		XPRA_BIN_NAME, subprocessArgsForGUI, subprocess.Args(args...)).Exec()
+	// todo convert this to subprocess
+	cmd := exec.Command(XPRA_BIN_NAME, "start", "--dpi=100", "--ssh=ssh -o StrictHostKeyChecking=accept-new", "ssh:user@"+string(domainIPBytes), "--exit-with-children", "--start-child='"+program+"'")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Start()
+	return cmd.Wait()
+
 }

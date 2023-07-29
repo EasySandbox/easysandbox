@@ -47,8 +47,12 @@ func main() {
 	switch cmd {
 	case "list-templates":
 		cli.PrintTemplatesList()
+	case "list-domains":
+		cli.PrintDomainsList()
 	case "create-domain":
 		cli.DoCreateDomain()
+	case "delete-domain":
+		cli.DeleteDomainCmd()
 	case "start-domain":
 		cli.StartDomain()
 	case "stop-domain":

@@ -5,7 +5,25 @@ import (
 	"os"
 	//"git.voidnet.tech/kev/easysandbox/cli"
 	"git.voidnet.tech/kev/easysandbox/templates"
+	"git.voidnet.tech/kev/easysandbox/domains"
 )
+
+func PrintDomainsList(){
+	// print all directories in domains.DomainsDir
+	files, err := os.ReadDir(domains.DomainsDir)
+
+	if err != nil {
+	  fmt.Println("Error reading domains directory:", err)
+	  return
+	}
+
+	for _, f := range files {
+	  if f.IsDir() {
+		fmt.Println(f.Name())
+	  }
+	}
+}
+
 
 func PrintTemplatesList() {
 	templateList, err := templates.GetRootTemplatePaths()

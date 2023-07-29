@@ -93,6 +93,23 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 
 func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 
+	conn, err := libvirt.NewConnect("qemu:///session")
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	domain,  lookupError := conn.LookupDomainByName(name)
+	if lookupError == nil {
+		isActive, isActiveErr := domain.IsActive()
+		if isActiveErr != nil {
+			return isActiveErr
+		}
+		if isActive {
+			return errors.New("domain is already running")
+		}
+		domain.Free()
+	}
 	rootCloneFile := DomainsDir + name + "/" + "root.qcow2"
 
 	// We create a root qcow2 with a backing file of the root template
@@ -116,13 +133,9 @@ func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 		return virtInstallCmdErr
 	}
 
-	conn, err := libvirt.NewConnect("qemu:///session")
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
 
-	domain, err := conn.LookupDomainByName(name)
+
+	domain, err = conn.LookupDomainByName(name)
 	if err != nil {
 		return err
 	}
