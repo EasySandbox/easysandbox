@@ -64,7 +64,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 			"-a", rootPath,
 			"--no-selinux-relabel",
 			"--firstboot-command", "setenforce 0",
-			"--root-password", "password:a",
+			"--root-password", "password:" + pass,
 			"--upload",
 			fmt.Sprintf("%s:%s", ipmapperClientPath, "/bin/ipmapper"),
 			"--upload",
