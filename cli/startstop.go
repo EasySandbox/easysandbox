@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -19,11 +20,14 @@ func StartDomain() error {
 
 	virtInstallArgs := domains.GetVirtInstallArgs(domainName, userProvidedArgs...)
 
-
 	err := domains.StartDomain(domainName, virtInstallArgs)
 
-	if err != nil {
-		FatalStderr("Failed to start domain: "+domainName + "\n" + err.Error(), 1)
+	var DomainIsRunningError *domains.DomainIsRunningError
+	if errors.As(err, &DomainIsRunningError) {
+		fmt.Println(fmt.Sprint("Domain is already running: ", domainName))
+		return err
+	} else if err != nil {
+		FatalStderr("Error occured while starting domain: "+domainName+"\n"+err.Error(), 1)
 	}
 	fmt.Println("Started domain: " + domainName)
 	return nil
@@ -39,7 +43,7 @@ func StopDomain() error {
 	err := domains.StopDomain(domainName)
 
 	if err != nil {
-		FatalStderr("Failed to stop domain: "+domainName + "\n" + err.Error(), 1)
+		FatalStderr(fmt.Sprintf("Failed to stop domain: %s\n%s", domainName, err.Error()), 1)
 	}
 	fmt.Println("Stopped domain: " + domainName)
 	return nil

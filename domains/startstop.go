@@ -26,7 +26,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 	pass, err := generateRandomPassword(12)
 
 	if err != nil {
-		return errors.New("Failed to generate random password: " + err.Error())
+		return fmt.Errorf("Failed to generate password: %w", err)
 	}
 
 	hostIP, err := getourip.GetOurIP()
@@ -64,7 +64,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 			"-a", rootPath,
 			"--no-selinux-relabel",
 			"--firstboot-command", "setenforce 0",
-			"--root-password", "password:" + pass,
+			"--root-password", "password:"+pass,
 			"--upload",
 			fmt.Sprintf("%s:%s", ipmapperClientPath, "/bin/ipmapper"),
 			"--upload",
@@ -99,14 +99,16 @@ func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 	}
 	defer conn.Close()
 
-	domain,  lookupError := conn.LookupDomainByName(name)
+	domain, lookupError := conn.LookupDomainByName(name)
 	if lookupError == nil {
 		isActive, isActiveErr := domain.IsActive()
 		if isActiveErr != nil {
 			return isActiveErr
 		}
 		if isActive {
-			return errors.New("domain is already running")
+			return &DomainIsRunningError{
+				Msg: "Cannot start domain that is already running",
+			}
 		}
 		domain.Free()
 	}
@@ -132,8 +134,6 @@ func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 	if virtInstallCmdErr != nil {
 		return virtInstallCmdErr
 	}
-
-
 
 	domain, err = conn.LookupDomainByName(name)
 	if err != nil {
@@ -169,12 +169,10 @@ func StopDomain(name string) error {
 	// loop until domain is shut off
 	shutdownSignalTimeout := time.After(10 * time.Second)
 	for {
-		state, returnInt, stateErr := domain.GetState()
-		if returnInt == -1 {
-			return errors.New("error getting domain state")
-		}
+		state, _, stateErr := domain.GetState()
+
 		if stateErr != nil {
-			return stateErr
+			return fmt.Errorf("error getting domain state: %w", stateErr)
 		}
 		time.Sleep(1 * time.Second)
 		if state == libvirt.DOMAIN_SHUTOFF {
