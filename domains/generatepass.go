@@ -2,6 +2,7 @@ package domains
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 )
 
@@ -19,7 +20,7 @@ func generateRandomPassword(length int) (string, error) {
 	for i := 0; i < length; i++ {
 		index, err := rand.Int(rand.Reader, maxIndex)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("Failed to generate password: %w", err)
 		}
 		password[i] = charset[index.Int64()]
 	}
