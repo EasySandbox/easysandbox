@@ -11,9 +11,12 @@ GO_BUILD := go build
 MAIN_SRC := main.go
 IPMAPPER_SRC := ipmapper/main.go
 
-.PHONY: all easysandbox ipmapper clean
+.PHONY: all tidy easysandbox ipmapper clean
 
-all: easysandbox ipmapper
+all: tidy easysandbox ipmapper
+
+tidy:
+	go mod tidy
 
 easysandbox:
 	$(GO_BUILD) -o $(EASYSANDBOX_BIN) $(MAIN_SRC)
