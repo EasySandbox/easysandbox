@@ -154,38 +154,40 @@ func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 func StopDomain(name string) error {
 	conn, err := libvirt.NewConnect("qemu:///session")
 	if err != nil {
-		return err
+		return fmt.Errorf("error connecting to libvirt: %w", err)
 	}
-	defer conn.Close()
+
+	var shutdownState libvirt.DomainState
+	var shutdownStateErr error
 
 	domain, err := conn.LookupDomainByName(name)
 	if err != nil {
-		return err
+		return fmt.Errorf("error looking up domain: %w", err)
 	}
-	defer domain.Free()
 
-	domain.Shutdown()
+	var shutdownErr error
 
-	// loop until domain is shut off
-	shutdownSignalTimeout := time.After(10 * time.Second)
-	for {
-		state, _, stateErr := domain.GetState()
+	var shutdownAttemptTime = time.Now().Unix()
+	for shutdownState != libvirt.DOMAIN_SHUTOFF {
+		shutdownState, _, shutdownStateErr = domain.GetState()
 
-		if stateErr != nil {
-			return fmt.Errorf("error getting domain state: %w", stateErr)
+		if shutdownStateErr != nil {
+			return fmt.Errorf("error getting domain state: %w", shutdownStateErr)
 		}
-		time.Sleep(1 * time.Second)
-		if state == libvirt.DOMAIN_SHUTOFF {
-			break
+		time.Sleep(50 * time.Millisecond)
+
+		if time.Now().Unix()-shutdownAttemptTime > 5 {
+			shutdownErr = domain.Shutdown()
+			if shutdownErr != nil {
+				return fmt.Errorf("Error shutting down libvirt domain %s: %w", name, shutdownErr)
+			}
+			shutdownAttemptTime = time.Now().Unix()
 		}
-		select {
-		case <-shutdownSignalTimeout:
-			domain.Shutdown()
-			shutdownSignalTimeout = time.After(10 * time.Second)
-		default:
-			continue
-		}
+
 	}
-	return domain.Undefine()
-
+	domainUndefineErr := domain.Undefine()
+	if domainUndefineErr != nil {
+		return fmt.Errorf("Error deleting libvirt domain (undefining) %s: %w", name, domainUndefineErr)
+	}
+	return nil
 }
