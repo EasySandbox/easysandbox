@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,11 +20,13 @@ var XPRA_BIN_NAME = "xpra"
 
 var retryClient = retryablehttp.NewClient()
 
+var DomainIsRunningError *domains.DomainIsRunningError
+
 func RunGUIApplication(ipmapperSocket string,
 	domain string, program string, args ...string) error {
 
 	startDomainErr := domains.StartDomain(domain, domains.GetVirtInstallArgs(domain))
-	if startDomainErr.Error() != "domain is already running" && startDomainErr != nil {
+	if !errors.As(startDomainErr, &DomainIsRunningError) {
 		return startDomainErr
 	}
 
