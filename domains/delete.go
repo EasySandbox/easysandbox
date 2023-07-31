@@ -1,7 +1,9 @@
 package domains
 
-import(
+import (
+	"errors"
 	"os"
+
 	"libvirt.org/go/libvirt"
 )
 
@@ -17,7 +19,7 @@ func DeleteDomain(name string) error {
 	if domainLookupErr == nil {
 		defer domain.Free() // if this line is placed out of the if scope the func breaks
 		err = domain.Destroy()
-		if err != nil {
+		if err != nil && !errors.As(err, &libvirt.Error{Code: libvirt.ERR_OPERATION_INVALID}) {
 			return err
 		}
 	}
