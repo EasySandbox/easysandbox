@@ -60,8 +60,9 @@ func RunGUIApplication(ipmapperSocket string,
 			gotIPMapperResult = true
 		}
 	}
-	if bodyErr != nil {
-		return bodyErr
+	domainIPBytes, bodyReadErr := io.ReadAll(domainIPRes.Body)
+	if bodyReadErr != nil {
+		return fmt.Errorf("failed to read IPMapper response body: %w", bodyReadErr)
 	}
 
 	xpraCmdArgs := subprocess.Args(
