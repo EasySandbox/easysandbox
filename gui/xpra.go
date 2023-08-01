@@ -32,15 +32,21 @@ func RunGUIApplication(ipmapperSocket string,
 
 	var domainIPRes *http.Response
 	var getDomainIPError error
+	gotIPMapperResult := false
 
 	retryClient.RetryMax = 10
-	notFoundTries := 10
-	for {
+	notFoundTries := retryClient.RetryMax
+	httpFailTries := retryClient.RetryMax
+
+	for !gotIPMapperResult {
 		domainIPRes, getDomainIPError = retryClient.Get(
 			fmt.Sprint("http://", ipmapperSocket, "/get?key=", domain))
 
 		if getDomainIPError != nil {
-			return getDomainIPError
+			httpFailTries--
+			if httpFailTries == 0 {
+				return fmt.Errorf("ipMapper returned error after %d: %w", httpFailTries, getDomainIPError)
+			}
 		}
 		if domainIPRes.StatusCode == 404 {
 			notFoundTries--
@@ -49,12 +55,11 @@ func RunGUIApplication(ipmapperSocket string,
 			}
 			time.Sleep(2 * time.Second)
 		} else if domainIPRes.StatusCode > 299 {
-			return fmt.Errorf("IPMapper returned status code %d", domainIPRes.StatusCode)
+			return fmt.Errorf("ipmapper returned status code %d", domainIPRes.StatusCode)
 		} else {
-			break
+			gotIPMapperResult = true
 		}
 	}
-	domainIPBytes, bodyErr := io.ReadAll(domainIPRes.Body)
 	if bodyErr != nil {
 		return bodyErr
 	}
