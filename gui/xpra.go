@@ -59,13 +59,16 @@ func RunGUIApplication(ipmapperSocket string,
 		return bodyErr
 	}
 
+	xpraCmdArgs := subprocess.Args(
+		"start",
+		"--dpi=100",
+		"--ssh=ssh -o StrictHostKeyChecking=accept-new",
+		"ssh:user@"+string(domainIPBytes),
+		"--exit-with-children",
+		"--start-child='"+program+"'")
 
-	// todo convert this to subprocess
-	cmd := exec.Command(XPRA_BIN_NAME, "start", "--dpi=100", "--ssh=ssh -o StrictHostKeyChecking=accept-new", "ssh:user@"+string(domainIPBytes), "--exit-with-children", "--start-child='"+program+"'")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Start()
-	return cmd.Wait()
+	cmdObj := subprocess.New(XPRA_BIN_NAME, xpraCmdArgs)
+
+	return cmdObj.Exec()
 
 }
