@@ -2,6 +2,7 @@ package domains
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"libvirt.org/go/libvirt"
@@ -11,25 +12,21 @@ func DeleteDomain(name string) error {
 
 	conn, err := libvirt.NewConnect("qemu:///session")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to libvirt: %v", err)
 	}
-	defer conn.Close()
 
 	domain, domainLookupErr := conn.LookupDomainByName(name)
 	if domainLookupErr == nil {
-		defer domain.Free() // if this line is placed out of the if scope the func breaks
 		err = domain.Destroy()
 		if err != nil && !errors.As(err, &libvirt.Error{Code: libvirt.ERR_OPERATION_INVALID}) {
-			return err
+			return fmt.Errorf("failed to destroy domain: %w", err)
+		}
+		if err := domain.Undefine(); err != nil {
+			return fmt.Errorf("failed to undefine domain: %w", err)
 		}
 	}
-
-	err = os.RemoveAll(DomainsDir + "/" + name)
-	if err != nil {
-		return err
-	}
-	if domainLookupErr == nil{
-		return domain.Undefine()
+	if err := os.RemoveAll(DomainsDir + "/" + name); err != nil {
+		return fmt.Errorf("failed to delete domain directory/files: %w", err)
 	}
 	return nil
 }
