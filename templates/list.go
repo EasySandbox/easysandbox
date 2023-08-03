@@ -1,19 +1,19 @@
 package templates
 
 import (
+	"fmt"
 	"os"
 )
 
 func getDiskFilesInDir(dir string) (names []string, err error) {
 	file, err := os.Open(dir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open dir %s: %w", dir, err)
 	}
-	defer file.Close()
 	names, err = file.Readdirnames(0)
 	var filteredNames []string
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read directory file names in %s: %w", dir, err)
 	}
 	// only show qcow2 files
 	for i := 0; i < len(names); i++ {
@@ -21,7 +21,6 @@ func getDiskFilesInDir(dir string) (names []string, err error) {
 			filteredNames = append(filteredNames, names[i])
 		}
 	}
-
 
 	return filteredNames, nil
 }
