@@ -15,7 +15,6 @@ func getDiskFilesInDir(dir string) (names []string, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read directory file names in %s: %w", dir, err)
 	}
-	// only show qcow2 files
 	for i := 0; i < len(names); i++ {
 		if names[i][len(names[i])-6:] == ".qcow2" {
 			filteredNames = append(filteredNames, names[i])
@@ -26,9 +25,7 @@ func getDiskFilesInDir(dir string) (names []string, err error) {
 }
 
 
-
 func GetRootTemplatePaths() (paths []string, err error) {
-	// get template files in TemplateDir
 
 	files, err := getDiskFilesInDir(RootTemplateDir)
 
@@ -37,7 +34,6 @@ func GetRootTemplatePaths() (paths []string, err error) {
 }
 
 func GetHomeTemplatePaths() (paths []string, err error) {
-	// get template files in TemplateDir
 
 	files, err := getDiskFilesInDir(HomeTemplateDir)
 
