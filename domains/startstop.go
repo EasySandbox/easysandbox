@@ -2,7 +2,6 @@ package domains
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -31,7 +30,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 
 	hostIP, err := getourip.GetOurIP()
 	if err != nil {
-		return err
+		return fmt.Errorf("faiiled to get host IP: %w", err)
 	}
 
 	ipmapperSystemdServiceFile, err := os.CreateTemp("", "ipmapper.service")
@@ -43,7 +42,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 	}()
 
 	if err != nil {
-		return errors.New("Failed to setup systemd service file for VM: " + err.Error())
+		return fmt.Errorf("failed to setup systemd service file for VM: %w", err)
 	}
 
 	ipmapperSystemdTimerFile, err := os.CreateTemp("", "ipmapper.timer")
@@ -55,7 +54,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 	}()
 
 	if err != nil {
-		return errors.New("Failed to setup systemd timer file for VM: " + err.Error())
+		return fmt.Errorf("failed to setup systemd timer file for VM: %w", err)
 	}
 
 	err = subprocess.New(
@@ -83,7 +82,7 @@ func configureEphemeralRoot(rootPath string, domain string) error {
 	).Exec()
 
 	if err != nil {
-		return errors.New("Failed to configure domain root: " + err.Error())
+		return fmt.Errorf("failed to configure domain root: %w", err.Error())
 	}
 
 	fmt.Println("Password for root: " + pass)
@@ -95,59 +94,47 @@ func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 
 	conn, err := libvirt.NewConnect("qemu:///session")
 	if err != nil {
-		return err
+		return fmt.Errorf("error connecting to libvirt: %w", err)
 	}
-	defer conn.Close()
 
 	domain, lookupError := conn.LookupDomainByName(name)
 	if lookupError == nil {
 		isActive, isActiveErr := domain.IsActive()
 		if isActiveErr != nil {
-			return isActiveErr
+			return fmt.Errorf("error checking if domain is active: %w", isActiveErr)
 		}
 		if isActive {
 			return &DomainIsRunningError{
-				Msg: "Cannot start domain that is already running",
+				Domain: name,
+				Msg:    "cannot start domain that is already running",
 			}
 		}
-		domain.Free()
 	}
-	rootCloneFile := DomainsDir + name + "/" + "root.qcow2"
+	rootCloneFile := DomainsDir + name + "/root.qcow2"
 
 	// We create a root qcow2 with a backing file of the root template
 	// If it already exists, it is overwritten
 	rootToUse, getBackingFileErr := GetBackingFilePath(rootCloneFile)
-	rootToUse, getBackingFileErr := GetBackingFile(rootCloneFile)
 	if getBackingFileErr != nil {
-		return getBackingFileErr
+		return fmt.Errorf("error getting backing file: %w", getBackingFileErr)
 	}
 
-	createDomainRootErr := createBackingFile(rootToUse, name, true)
-	if createDomainRootErr != nil {
-		return createDomainRootErr
+	if createDomainRootErr := createBackingFile(rootToUse, name, true); createDomainRootErr != nil {
+		return fmt.Errorf("error creating domain root: %w", createDomainRootErr)
+	}
+
+	if configureDomainRootErr := configureEphemeralRoot(rootCloneFile, name); configureDomainRootErr != nil {
+		return fmt.Errorf("error configuring domain root: %w", configureDomainRootErr)
 	}
 
 	// kind of a hack, because we could use the libvirt api, but that involves XML
-	virtInstallCmd := subprocess.New("virt-install", virtInstallArgs)
-
-	virtInstallCmdErr := virtInstallCmd.Exec()
-
-	if virtInstallCmdErr != nil {
-		return virtInstallCmdErr
+	if virtInstallCmdErr := subprocess.New("virt-install", virtInstallArgs).Exec(); virtInstallCmdErr != nil {
+		return fmt.Errorf("error running virt-install: %w", virtInstallCmdErr)
 	}
 
-	domain, err = conn.LookupDomainByName(name)
-	if err != nil {
-		return err
+	if domainCreationError := domain.Create(); domainCreationError != nil {
+		return fmt.Errorf("error creating libvirt domain: %w", domainCreationError)
 	}
-	defer domain.Free()
-
-	configureDomainRootErr := configureEphemeralRoot(rootCloneFile, name)
-	if configureDomainRootErr != nil {
-		return configureDomainRootErr
-	}
-
-	domain.Create()
 
 	return nil
 }
@@ -166,8 +153,6 @@ func StopDomain(name string) error {
 		return fmt.Errorf("error looking up domain: %w", err)
 	}
 
-	var shutdownErr error
-
 	var shutdownAttemptTime = time.Now().Unix()
 	for shutdownState != libvirt.DOMAIN_SHUTOFF {
 		shutdownState, _, shutdownStateErr = domain.GetState()
@@ -178,16 +163,15 @@ func StopDomain(name string) error {
 		time.Sleep(50 * time.Millisecond)
 
 		if time.Now().Unix()-shutdownAttemptTime > 5 {
-			shutdownErr = domain.Shutdown()
-			if shutdownErr != nil {
+			if shutdownErr := domain.Shutdown(); shutdownErr != nil {
 				return fmt.Errorf("Error shutting down libvirt domain %s: %w", name, shutdownErr)
 			}
 			shutdownAttemptTime = time.Now().Unix()
 		}
 
 	}
-	domainUndefineErr := domain.Undefine()
-	if domainUndefineErr != nil {
+
+	if domainUndefineErr := domain.Undefine(); domainUndefineErr != nil {
 		return fmt.Errorf("Error deleting libvirt domain (undefining) %s: %w", name, domainUndefineErr)
 	}
 	return nil
