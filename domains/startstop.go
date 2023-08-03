@@ -116,6 +116,7 @@ func StartDomain(name string, virtInstallArgs subprocess.Option) error {
 
 	// We create a root qcow2 with a backing file of the root template
 	// If it already exists, it is overwritten
+	rootToUse, getBackingFileErr := GetBackingFilePath(rootCloneFile)
 	rootToUse, getBackingFileErr := GetBackingFile(rootCloneFile)
 	if getBackingFileErr != nil {
 		return getBackingFileErr

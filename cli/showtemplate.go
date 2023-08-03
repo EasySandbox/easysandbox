@@ -14,7 +14,7 @@ func ShowTemplate() {
 
 	domainName := os.Args[2]
 
-	template, err := domains.GetBackingFile(domains.DomainsDir + "/" + domainName + "/root.qcow2")
+	template, err := domains.GetBackingFilePath(domains.DomainsDir + "/" + domainName + "/root.qcow2")
 	if err != nil {
 		FatalStderr("Failed to get backing file: "+err.Error(), 1)
 	}

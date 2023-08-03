@@ -1,14 +1,12 @@
 package domains
 
 import (
-	"errors"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
-
-func GetBackingFile(path string) (string, error) {
+func GetBackingFilePath(path string) (string, error) {
 	cmd := exec.Command("qemu-img", "info", path)
 	output, err := cmd.Output()
 	if err != nil {
@@ -23,5 +21,5 @@ func GetBackingFile(path string) (string, error) {
 		}
 	}
 
-	return "", errors.New("no backing file found")
+	return "", &BackingFileDoesNotExistError{DiskImagePath: path, Msg: "no backing file defined for: " + path}
 }
