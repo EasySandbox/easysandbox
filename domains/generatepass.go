@@ -7,6 +7,10 @@ import (
 )
 
 func generateRandomPassword(length int) (string, error) {
+	if length < 8 {
+		return "", fmt.Errorf("password length must be at least 8 characters")
+	}
+
 	// Define the characters to be used in the password
 	charset := "abcdefghjkmnopqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*()_+{}[]:;<>,.?/~"
 
