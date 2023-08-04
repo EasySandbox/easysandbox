@@ -6,7 +6,8 @@ import (
 	"math/big"
 )
 
-func generateRandomPassword(length int) (string, error) {
+func generateRandomPassword(length uint8) (string, error) {
+
 	if length < 8 {
 		return "", fmt.Errorf("password length must be at least 8 characters")
 	}
@@ -21,10 +22,10 @@ func generateRandomPassword(length int) (string, error) {
 	maxIndex := big.NewInt(int64(len(charset)))
 
 	// Generate a random password by selecting characters from the charset
-	for i := 0; i < length; i++ {
+	for i := uint8(0); i < length; i++ {
 		index, err := rand.Int(rand.Reader, maxIndex)
 		if err != nil {
-			return "", fmt.Errorf("Failed to generate password: %w", err)
+			return "", fmt.Errorf("failed to generate password: %w", err)
 		}
 		password[i] = charset[index.Int64()]
 	}
