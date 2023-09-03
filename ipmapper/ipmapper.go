@@ -1,4 +1,4 @@
-package main
+package ipmapper
 
 import (
 	//"crypto/hmac"
@@ -6,23 +6,21 @@ import (
 	//"io/ioutil"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net"
-	"net/http"
 	"os"
+
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
-	"github.com/adrg/xdg"
+	//"github.com/adrg/xdg"
 
 	"git.voidnet.tech/kev/easysandbox/filesystem"
-	"git.voidnet.tech/kev/easysandbox/getourip"
 )
 
-var hmacKeyPath = xdg.DataHome + "/easysandbox/hmac.key"
+var hmacKeyPath = "/tmp/blah" // xdg.DataHome + "/easysandbox/hmac.key"
 
 var ipMap struct {
 	sync.RWMutex
@@ -48,7 +46,8 @@ func init() {
 
 	// }
 
-	ipMap.m = make(map[string]net.IP)
+	//ipMap.m = make(map[string]net.IP)
+	//flag.Parse()
 }
 
 func addIP(w http.ResponseWriter, r *http.Request) {
@@ -99,58 +98,18 @@ func getIP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ip.String()))
 }
 
-func ipReporter() {
+var (
+	fs       = flag.NewFlagSet("ipmapper", flag.ExitOnError)
+	bindAddr = fs.String("bind-addr", "0.0.0.0", "IP address to bind to")
+	bindPort = fs.Uint("port", uint(8080), "Port to bind to")
+)
 
-	server := "hostsystem"
+func IPMapperMain() {
+	fs.Parse(os.Args[2:])
 
-	hostname, _ := os.Hostname()
-	ip, _ := getourip.GetOurIP()
-
-	url := fmt.Sprintf("http://%s:8080/add?domain=%s&ip=%s", server, hostname, ip)
-
-	for {
-
-		resp, err := http.Post(url, "text/plain", nil)
-
-		if err != nil {
-			time.Sleep(1 * time.Second)
-			continue
-		}
-
-		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			body, err := io.ReadAll(resp.Body)
-			if err == nil {
-				if strings.HasPrefix(string(body), "Added IP") {
-					break
-				}
-			}
-		}
-		time.Sleep(1 * time.Second)
-
-	}
-
-}
-
-func main() {
-
-	var bindAddr string
-	var bindPort int
-
-	if len(os.Args) > 1 {
-		if os.Args[1] == "client" {
-			ipReporter()
-			return
-		}
-	}
-
-	flag.StringVar(&bindAddr, "bind-addr", "", "IP address to bind to")
-	flag.IntVar(&bindPort, "bind-port", 8080, "Port to bind to")
-
-	flag.Parse()
-
-	addr := ":" + strconv.Itoa(bindPort)
-	if bindAddr != "" {
-		addr = bindAddr + ":" + strconv.Itoa(bindPort)
+	addr := ":" + strconv.Itoa(int(*bindPort))
+	if *bindAddr != "" {
+		addr = *bindAddr + ":" + strconv.Itoa(int(*bindPort))
 	}
 
 	http.HandleFunc("/add", addIP)

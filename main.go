@@ -3,24 +3,21 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
-
 
 	"git.voidnet.tech/kev/easysandbox/cli"
-	"git.voidnet.tech/kev/easysandbox/domains"
 	"git.voidnet.tech/kev/easysandbox/filesystem"
-	"git.voidnet.tech/kev/easysandbox/gui"
+	"git.voidnet.tech/kev/easysandbox/ipmapper"
+	"git.voidnet.tech/kev/easysandbox/sandbox"
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
 
 var Version = "0.0.0"
 
-func main() {
+func init() {
+	//defer trace.Stop()
+}
 
-	if _, err := exec.LookPath(gui.XPRA_BIN_NAME); err != nil {
-		cli.PrintStderr(fmt.Sprintf("%s not found in path\nIt is required for rendering VM apps", gui.XPRA_BIN_NAME))
-		os.Exit(1)
-	}
+func main() {
 
 	if len(os.Args) < 2 {
 		cli.PrintStderr("usage: easysandbox <command>")
@@ -31,7 +28,7 @@ func main() {
 		directoriesToCreate := []string{
 			templates.HomeTemplateDir,
 			templates.RootTemplateDir,
-			domains.DomainsDir,
+			sandbox.SandboxInstallDir,
 		}
 		for _, dir := range directoriesToCreate {
 			dir := dir // necessary because go is weird
@@ -47,22 +44,20 @@ func main() {
 	switch cmd {
 	case "list-templates":
 		cli.PrintTemplatesList()
-	case "list-domains":
+	case "list-sandboxs":
 		cli.PrintDomainsList()
-	case "create-domain":
+	case "create-sandbox":
 		cli.DoCreateDomain()
-	case "delete-domain":
-		cli.DeleteDomainCmd()
-	case "start-domain":
+	case "delete-sandbox":
+		cli.DeleteSandbox()
+	case "start-sandbox":
 		cli.StartDomain()
-	case "stop-domain":
-		cli.StopDomain()
-	//case "get-domain-ip":
-		//cli.PrintIPAddress()
-	case "show-template":
-		cli.ShowTemplate()
-	case "domain-exec":
-		cli.DomainExec()
+	case "stop-sandbox":
+		cli.StopSandbox()
+	case "ipmapper":
+		ipmapper.IPMapperMain()
+	//case "get-sandbox-ip":
+	//cli.PrintIPAddress()
 	case "version":
 		fmt.Println(Version)
 	default:

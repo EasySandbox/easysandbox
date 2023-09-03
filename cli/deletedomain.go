@@ -1,22 +1,35 @@
 package cli
 
 import (
-	"os"
 	"fmt"
-	"git.voidnet.tech/kev/easysandbox/domains"
+	"os"
+	"errors"
+	"git.voidnet.tech/kev/easysandbox/virtproviders"
+
 )
 
-func DeleteDomainCmd() {
-	if len(os.Args) != 3 {
-		FatalStderr("usage: easysandbox delete-domain <domain-name>", 2)
+func DeleteSandbox()  {
+	if len(os.Args) < 3 {
+		FatalStderr("usage: easysandbox delete <sandbox-name>", 2)
 	}
 
-	domainName := os.Args[2]
+	sandboxName := os.Args[2]
 
-	err := domains.DeleteDomain(domainName)
+	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
+
+	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
+		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	}
+	sandboxAPISymbolString := "DeleteSandbox"
+	sandboxAPISymbol, err := provider.Lookup(sandboxAPISymbolString)
 	if err != nil {
-		FatalStderr("Failed to delete domain: "+err.Error(), 1)
-	} else {
-		fmt.Println("Domain deleted successfully")
+		FatalStderr(fmt.Sprintf("Error looking up sandbox %s API: %s", sandboxAPISymbolString, err), 1)
 	}
+	sandboxDeleteError := sandboxAPISymbol.(func(string) error)(sandboxName)
+
+	if sandboxDeleteError != nil {
+		FatalStderr("Failed to stop sandbox: "+sandboxDeleteError.Error(), 5)
+	}
+	fmt.Println("Sandbox deleted successfully")
+
 }

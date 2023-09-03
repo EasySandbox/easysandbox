@@ -1,4 +1,4 @@
-package domains
+package generatepassword
 
 import (
 	"crypto/rand"
@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-func generateRandomPassword(length uint8) (string, error) {
+func GenerateRandomPassword(length uint8) (string, error) {
 
 	if length < 8 {
 		return "", fmt.Errorf("password length must be at least 8 characters")
