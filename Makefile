@@ -11,7 +11,7 @@ MAIN_SRC := main.go
 
 .PHONY: all tidy easysandbox  clean
 
-all: tidy easysandbox ipmapper
+all: tidy easysandbox
 
 tidy:
 	go mod tidy

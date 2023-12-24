@@ -6,7 +6,6 @@ import (
 
 	"git.voidnet.tech/kev/easysandbox/cli"
 	"git.voidnet.tech/kev/easysandbox/filesystem"
-	"git.voidnet.tech/kev/easysandbox/ipmapper"
 	"git.voidnet.tech/kev/easysandbox/sandbox"
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
@@ -45,6 +44,8 @@ func main() {
 	case "list-templates":
 		cli.PrintTemplatesList()
 	case "list-sandboxs":
+		fallthrough
+	case "list-sandboxes":
 		cli.PrintDomainsList()
 	case "create-sandbox":
 		cli.DoCreateDomain()
@@ -54,8 +55,6 @@ func main() {
 		cli.StartDomain()
 	case "stop-sandbox":
 		cli.StopSandbox()
-	case "ipmapper":
-		ipmapper.IPMapperMain()
 	//case "get-sandbox-ip":
 	//cli.PrintIPAddress()
 	case "version":
