@@ -55,8 +55,12 @@ func main() {
 		cli.StartDomain()
 	case "stop-sandbox":
 		cli.StopSandbox()
-	//case "get-sandbox-ip":
-	//cli.PrintIPAddress()
+	case "attach-gui":
+		cli.GUIAttach()
+	case "sandbox-exec":
+		fallthrough
+	case "sandbox-execute":
+		cli.SandboxExecute()
 	case "version":
 		fmt.Println(Version)
 	default:
