@@ -7,7 +7,7 @@ import (
 	"git.voidnet.tech/kev/easysandbox/virtproviders"
 )
 
-func StartDomain() error {
+func StartSandbox() error {
 	if len(os.Args) < 3 {
 		FatalStderr("usage: easysandbox start <sandbox-name>", 2)
 	}

@@ -9,7 +9,7 @@ import (
 	"git.voidnet.tech/kev/easysandbox/virtproviders"
 )
 
-func DoCreateDomain() {
+func DoCreateSandbox() {
 	if len(os.Args) < 5 {
 		FatalStderr("usage: easysandbox create-sandbox <home-template-name> <root-template-name> <sandbox-name>", 4)
 	}

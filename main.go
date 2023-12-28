@@ -46,13 +46,13 @@ func main() {
 	case "list-sandboxs":
 		fallthrough
 	case "list-sandboxes":
-		cli.PrintDomainsList()
+		cli.PrintSandboxList()
 	case "create-sandbox":
-		cli.DoCreateDomain()
+		cli.DoCreateSandbox()
 	case "delete-sandbox":
 		cli.DeleteSandbox()
 	case "start-sandbox":
-		cli.StartDomain()
+		cli.StartSandbox()
 	case "stop-sandbox":
 		cli.StopSandbox()
 	case "attach-gui":

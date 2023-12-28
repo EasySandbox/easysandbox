@@ -10,7 +10,7 @@ import (
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
 
-func PrintDomainsList() {
+func PrintSandboxList() {
 	// print all directories in sandbox.SandboxInstallDir
 	files, err := os.ReadDir(sandbox.SandboxInstallDir)
 
