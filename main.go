@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"git.voidnet.tech/kev/easysandbox/cli"
-	"git.voidnet.tech/kev/easysandbox/filesystem"
 	"git.voidnet.tech/kev/easysandbox/sandbox"
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
@@ -23,6 +22,10 @@ func main() {
 		os.Exit(2)
 	}
 
+	createDirectory := func(path string) (err error) {
+		return os.MkdirAll(path, 0700)
+	}
+
 	func() {
 		directoriesToCreate := []string{
 			templates.HomeTemplateDir,
@@ -32,7 +35,7 @@ func main() {
 		for _, dir := range directoriesToCreate {
 			dir := dir // necessary because go is weird
 			defer func() {
-				if err := filesystem.CreateDirectory(dir); err != nil {
+				if err := createDirectory(dir); err != nil {
 					cli.FatalStderr("Failed to create directory: "+dir, 3)
 				}
 			}()
@@ -57,9 +60,9 @@ func main() {
 		cli.StopSandbox()
 	case "attach-gui":
 		cli.GUIAttach()
-	case "sandbox-exec":
+	case "gui-exec":
 		fallthrough
-	case "sandbox-execute":
+	case "gui-execute":
 		cli.SandboxExecute()
 	case "version":
 		fmt.Println(Version)
