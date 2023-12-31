@@ -18,7 +18,7 @@ type SandboxInfo struct {
 }
 
 func NewSandboxInfo(sandboxName, rootTemplate, homeTemplate string, maxMem uint32, maxCPUs uint32) (*SandboxInfo, error) {
-	sandboxNameValid, _ := regexp.MatchString("^[a-zA-Z0-9]{1,12}$", sandboxName)
+	sandboxNameValid, _ := regexp.MatchString("^[a-zA-Z0-9]{1,30}$", sandboxName)
 	if !sandboxNameValid {
 		return nil, errors.New("err invalid sandbox name")
 	}
