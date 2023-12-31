@@ -18,7 +18,10 @@ func DoCreateSandbox() {
 	rootTemplate := os.Args[3]
 	name := os.Args[4]
 
-	sandboxInfo := *sandbox.NewSandboxInfo(name, rootTemplate, homeTemplate, 4096, 6)
+	sandboxInfo, invalidSandboxInfoErr := sandbox.NewSandboxInfo(name, rootTemplate, homeTemplate, 4096, 6)
+	if invalidSandboxInfoErr != nil {
+		FatalStderr("Invalid sandbox info: "+invalidSandboxInfoErr.Error(), 4)
+	}
 
 	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
@@ -32,7 +35,7 @@ func DoCreateSandbox() {
 		FatalStderr(fmt.Sprintf("Error looking up sandbox %s API: %s", sandboxAPISymbolString, err), 1)
 	}
 
-	sandboxCreationError := sandboxAPISymbol.(func(sandbox.SandboxInfo) error)(sandboxInfo)
+	sandboxCreationError := sandboxAPISymbol.(func(sandbox.SandboxInfo) error)(*sandboxInfo)
 
 	if sandboxCreationError != nil {
 		FatalStderr("Failed to create sandbox: "+err.Error(), 5)

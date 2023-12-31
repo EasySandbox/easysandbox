@@ -1,7 +1,9 @@
 package sandbox
 
 import (
+	"errors"
 	"github.com/adrg/xdg"
+	"regexp"
 )
 
 var SandboxInstallDir = xdg.DataHome + "/easysandbox/sandboxes/"
@@ -15,15 +17,18 @@ type SandboxInfo struct {
 	MaxCPUs      uint32
 }
 
-func NewSandboxInfo(name, rootTemplate, homeTemplate string, maxMem uint32, maxCPUs uint32) *SandboxInfo {
-
+func NewSandboxInfo(sandboxName, rootTemplate, homeTemplate string, maxMem uint32, maxCPUs uint32) (*SandboxInfo, error) {
+	sandboxNameValid, _ := regexp.MatchString("^[a-zA-Z0-9]{1,12}$", sandboxName)
+	if !sandboxNameValid {
+		return nil, errors.New("err invalid sandbox name")
+	}
 	return &SandboxInfo{
-		Name:         name,
+		Name:         sandboxName,
 		RootTemplate: rootTemplate,
 		HomeTemplate: homeTemplate,
 		MaxMemory: maxMem,
 		MaxCPUs: maxCPUs,
-	}
+	}, nil
 }
 
 type SandboxCreator interface {
