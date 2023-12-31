@@ -2,10 +2,7 @@ module git.voidnet.tech/kev/easysandbox
 
 go 1.19
 
-require (
-	github.com/adrg/xdg v0.4.0
-	github.com/estebangarcia21/subprocess v0.0.0-20230526204252-a1a6de4773be
-)
+require github.com/adrg/xdg v0.4.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

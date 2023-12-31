@@ -11,9 +11,6 @@ import (
 
 var Version = "0.0.0"
 
-func init() {
-	//defer trace.Stop()
-}
 
 func main() {
 
@@ -63,7 +60,7 @@ func main() {
 	case "gui-exec":
 		fallthrough
 	case "gui-execute":
-		cli.SandboxExecute()
+		cli.SandboxGUIExecute()
 	case "version":
 		fmt.Println(Version)
 	default:
