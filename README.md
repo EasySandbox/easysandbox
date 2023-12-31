@@ -1,22 +1,10 @@
 # EasySandbox
 
-Easysandbox is a tool to automate libvirt for the purpose of sandboxing desktop applications.
+EasySandbox is a Linux tool for managing sandboxes for linux programs.
 
+Most functionality is implemented in libraries that implement sandboxing,
+with such that wrap existing software useful for linux sandboxing such
+as qemu (via libvirt), bubblewrap, or others.
 
-## System Dependencies
-
-You need the following packages installed:
-
-* libvirt
-* go 1.19 (may work with other versions)
-* virt-customize (libguestfs-tools)
-* virt-install
-* qemu-img
-
-
-# Building
-
-    $ make
-
-The binary will be in the release directory.
+This program merely directs the plugins according to user intent.
 
