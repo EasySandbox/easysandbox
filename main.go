@@ -3,40 +3,36 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
-
 
 	"git.voidnet.tech/kev/easysandbox/cli"
-	"git.voidnet.tech/kev/easysandbox/domains"
-	"git.voidnet.tech/kev/easysandbox/filesystem"
-	"git.voidnet.tech/kev/easysandbox/gui"
+	"git.voidnet.tech/kev/easysandbox/sandbox"
 	"git.voidnet.tech/kev/easysandbox/templates"
 )
 
 var Version = "0.0.0"
 
-func main() {
 
-	if _, err := exec.LookPath(gui.XPRA_BIN_NAME); err != nil {
-		cli.PrintStderr(fmt.Sprintf("%s not found in path\nIt is required for rendering VM apps", gui.XPRA_BIN_NAME))
-		os.Exit(1)
-	}
+func main() {
 
 	if len(os.Args) < 2 {
 		cli.PrintStderr("usage: easysandbox <command>")
 		os.Exit(2)
 	}
 
+	createDirectory := func(path string) (err error) {
+		return os.MkdirAll(path, 0700)
+	}
+
 	func() {
 		directoriesToCreate := []string{
 			templates.HomeTemplateDir,
 			templates.RootTemplateDir,
-			domains.DomainsDir,
+			sandbox.SandboxInstallDir,
 		}
 		for _, dir := range directoriesToCreate {
 			dir := dir // necessary because go is weird
 			defer func() {
-				if err := filesystem.CreateDirectory(dir); err != nil {
+				if err := createDirectory(dir); err != nil {
 					cli.FatalStderr("Failed to create directory: "+dir, 3)
 				}
 			}()
@@ -47,22 +43,24 @@ func main() {
 	switch cmd {
 	case "list-templates":
 		cli.PrintTemplatesList()
-	case "list-domains":
-		cli.PrintDomainsList()
-	case "create-domain":
-		cli.DoCreateDomain()
-	case "delete-domain":
-		cli.DeleteDomainCmd()
-	case "start-domain":
-		cli.StartDomain()
-	case "stop-domain":
-		cli.StopDomain()
-	//case "get-domain-ip":
-		//cli.PrintIPAddress()
-	case "show-template":
-		cli.ShowTemplate()
-	case "domain-exec":
-		cli.DomainExec()
+	case "list-sandboxs":
+		fallthrough
+	case "list-sandboxes":
+		cli.PrintSandboxList()
+	case "create-sandbox":
+		cli.DoCreateSandbox()
+	case "delete-sandbox":
+		cli.DeleteSandbox()
+	case "start-sandbox":
+		cli.StartSandbox()
+	case "stop-sandbox":
+		cli.StopSandbox()
+	case "attach-gui":
+		cli.GUIAttach()
+	case "gui-exec":
+		fallthrough
+	case "gui-execute":
+		cli.SandboxGUIExecute()
 	case "version":
 		fmt.Println(Version)
 	default:

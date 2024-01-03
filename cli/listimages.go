@@ -3,27 +3,28 @@ package cli
 import (
 	"fmt"
 	"os"
+
 	//"git.voidnet.tech/kev/easysandbox/cli"
+
+	"git.voidnet.tech/kev/easysandbox/sandbox"
 	"git.voidnet.tech/kev/easysandbox/templates"
-	"git.voidnet.tech/kev/easysandbox/domains"
 )
 
-func PrintDomainsList(){
-	// print all directories in domains.DomainsDir
-	files, err := os.ReadDir(domains.DomainsDir)
+func PrintSandboxList() {
+	// print all directories in sandbox.SandboxInstallDir
+	files, err := os.ReadDir(sandbox.SandboxInstallDir)
 
 	if err != nil {
-	  fmt.Println("Error reading domains directory:", err)
-	  return
+		fmt.Println("Error reading domains directory:", err)
+		return
 	}
 
 	for _, f := range files {
-	  if f.IsDir() {
-		fmt.Println(f.Name())
-	  }
+		if f.IsDir() {
+			fmt.Println(f.Name())
+		}
 	}
 }
-
 
 func PrintTemplatesList() {
 	templateList, err := templates.GetRootTemplatePaths()

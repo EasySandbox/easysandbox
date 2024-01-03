@@ -1,6 +1,0 @@
-[Unit]
-Description=IPMapper Client
-
-[Service]
-Type=oneshot
-ExecStart=/bin/ipmapper client

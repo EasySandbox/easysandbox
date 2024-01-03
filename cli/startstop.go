@@ -3,44 +3,60 @@ package cli
 import (
 	"fmt"
 	"os"
-
-	"git.voidnet.tech/kev/easysandbox/domains"
+	"errors"
+	"git.voidnet.tech/kev/easysandbox/virtproviders"
 )
 
-func StartDomain() error {
-	var userProvidedArgs []string
+func StartSandbox() error {
 	if len(os.Args) < 3 {
-		FatalStderr("usage: easysandbox start <domain-name>", 2)
-	} else if len(os.Args) > 3 {
-		userProvidedArgs = os.Args[3:]
+		FatalStderr("usage: easysandbox start <sandbox-name>", 2)
 	}
 
-	domainName := os.Args[2]
+	sandboxName := os.Args[2]
 
-	virtInstallArgs := domains.GetVirtInstallArgs(domainName, userProvidedArgs...)
+	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
-
-	err := domains.StartDomain(domainName, virtInstallArgs)
-
+	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
+		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	}
+	sandboxAPISymbolString := "StartSandbox"
+	sandboxAPISymbol, err := provider.Lookup(sandboxAPISymbolString)
 	if err != nil {
-		FatalStderr("Failed to start domain: "+domainName + "\n" + err.Error(), 1)
+		FatalStderr(fmt.Sprintf("Error looking up sandbox %s API: %s", sandboxAPISymbolString, err), 1)
 	}
-	fmt.Println("Started domain: " + domainName)
+	sandboxStartError := sandboxAPISymbol.(func(string) error)(sandboxName)
+
+	if sandboxStartError != nil {
+		FatalStderr("Failed to start sandbox: "+sandboxStartError.Error(), 5)
+	}
+	fmt.Println("Sandbox started successfully")
 	return nil
+
 }
 
-func StopDomain() error {
-	if len(os.Args) != 3 {
-		FatalStderr("usage: easysandbox stop <domain-name>", 2)
+func StopSandbox() error {
+	if len(os.Args) < 3 {
+		FatalStderr("usage: easysandbox stop <sandbox-name>", 2)
 	}
 
-	domainName := os.Args[2]
+	sandboxName := os.Args[2]
 
-	err := domains.StopDomain(domainName)
+	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
+	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
+		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	}
+	sandboxAPISymbolString := "StopSandbox"
+	sandboxAPISymbol, err := provider.Lookup(sandboxAPISymbolString)
 	if err != nil {
-		FatalStderr("Failed to stop domain: "+domainName + "\n" + err.Error(), 1)
+		FatalStderr(fmt.Sprintf("Error looking up sandbox %s API: %s", sandboxAPISymbolString, err), 1)
 	}
-	fmt.Println("Stopped domain: " + domainName)
+	sandboxStopError := sandboxAPISymbol.(func(string) error)(sandboxName)
+
+	if sandboxStopError != nil {
+		FatalStderr("Failed to stop sandbox: "+sandboxStopError.Error(), 5)
+	}
+	fmt.Println("Sandbox stopped successfully")
 	return nil
+
 }
