@@ -31,9 +31,6 @@ func NewSandboxInfo(sandboxName, rootTemplate, homeTemplate string, maxMem uint3
 	}, nil
 }
 
-type SandboxCreator interface {
-	CreateSandbox(SandboxInfo) error
-}
 
 type Sandbox interface {
 	StartSandbox(SandboxInfo, discardChanges bool) error
@@ -43,8 +40,3 @@ type Sandbox interface {
 	GetSandboxStatus(SandboxInfo) (string, error)
 }
 
-type SandboxExec interface {
-	//SSHShell(Sandbox, SSHArgs) error
-	//SSHExec(Sandbox) error
-	XPRAExec(sandbox SandboxInfo, command string, args ***string) error
-}
