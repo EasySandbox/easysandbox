@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -25,8 +24,8 @@ func DoCreateSandbox() {
 
 	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
-	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
-		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	if getProviderError != nil {
+		FatalStderr("Failed to load virt provider: "+getProviderError.Error(), 5)
 	}
 
 	sandboxAPISymbolString := "CreateSandbox"
