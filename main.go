@@ -6,11 +6,9 @@ import (
 
 	"git.voidnet.tech/kev/easysandbox/cli"
 	"git.voidnet.tech/kev/easysandbox/sandbox"
-	"git.voidnet.tech/kev/easysandbox/templates"
 )
 
 var Version = "0.0.0"
-
 
 func main() {
 
@@ -25,8 +23,6 @@ func main() {
 
 	func() {
 		directoriesToCreate := []string{
-			templates.HomeTemplateDir,
-			templates.RootTemplateDir,
 			sandbox.SandboxInstallDir,
 		}
 		for _, dir := range directoriesToCreate {
@@ -41,8 +37,10 @@ func main() {
 	cmd := os.Args[1]
 
 	switch cmd {
+	case "list-providers":
+		cli.ListProviders()
 	case "list-templates":
-		cli.PrintTemplatesList()
+		cli.PrintTemplates()
 	case "list-sandboxs":
 		fallthrough
 	case "list-sandboxes":
