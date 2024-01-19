@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
-	"errors"
+
 	"git.voidnet.tech/kev/easysandbox/virtproviders"
 )
 
@@ -16,8 +16,8 @@ func StartSandbox() error {
 
 	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
-	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
-		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	if getProviderError != nil {
+		FatalStderr("Failed to load virt provider: "+getProviderError.Error(), 5)
 	}
 	sandboxAPISymbolString := "StartSandbox"
 	sandboxAPISymbol, err := provider.Lookup(sandboxAPISymbolString)
@@ -43,8 +43,8 @@ func StopSandbox() error {
 
 	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
-	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
-		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	if getProviderError != nil {
+		FatalStderr("Failed to load virt provider: "+getProviderError.Error(), 5)
 	}
 	sandboxAPISymbolString := "StopSandbox"
 	sandboxAPISymbol, err := provider.Lookup(sandboxAPISymbolString)

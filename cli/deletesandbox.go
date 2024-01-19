@@ -3,12 +3,11 @@ package cli
 import (
 	"fmt"
 	"os"
-	"errors"
-	"git.voidnet.tech/kev/easysandbox/virtproviders"
 
+	"git.voidnet.tech/kev/easysandbox/virtproviders"
 )
 
-func DeleteSandbox()  {
+func DeleteSandbox() {
 	if len(os.Args) < 3 {
 		FatalStderr("usage: easysandbox delete <sandbox-name>", 2)
 	}
@@ -17,8 +16,8 @@ func DeleteSandbox()  {
 
 	provider, getProviderError := virtproviders.GetProviderFromCLIFlag()
 
-	if errors.Is(getProviderError, &virtproviders.VirtProviderLoadFailureError{}) {
-		FatalStderr("Failed to load virt provider: " + errors.Unwrap(getProviderError).Error(), 5)
+	if getProviderError != nil {
+		FatalStderr("Failed to load virt provider: "+getProviderError.Error(), 5)
 	}
 	sandboxAPISymbolString := "DeleteSandbox"
 	sandboxAPISymbol, err := provider.Lookup(sandboxAPISymbolString)
