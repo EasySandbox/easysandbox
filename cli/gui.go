@@ -30,7 +30,7 @@ func SandboxGUIExecute() error {
 	if sandboxGUIExecuteErr != nil {
 		FatalStderr("Failed to execute sandbox gui: "+sandboxGUIExecuteErr.Error(), 5)
 	}
-	fmt.Println("Sandbox GUI attached successfully")
+	fmt.Println("Sandbox GUI command executed")
 	return nil
 
 }

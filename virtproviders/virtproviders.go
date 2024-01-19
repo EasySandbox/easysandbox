@@ -9,7 +9,7 @@ import (
 	"github.com/adrg/xdg"
 )
 
-var pluginDirs = []string{"/usr/lib64/easysandbox/", xdg.DataHome + "/easysandbox/plugins/", "release/plugins/"}
+var pluginDirs = []string{"/usr/lib64/easysandbox/", xdg.DataHome + "/easysandbox/plugins/", "release/easysandbox-plugins/", "easysandbox-plugins/"}
 
 type VirtProviderLoadFailureError struct {
 	Name string
