@@ -54,6 +54,7 @@ func main() {
 	case "stop-sandbox":
 		cli.StopSandbox()
 	case "attach-gui":
+	case "gui-attach":
 		cli.GUIAttach()
 	case "gui-exec":
 		fallthrough
